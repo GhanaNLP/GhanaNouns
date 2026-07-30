@@ -190,15 +190,19 @@ class RateLimiter:
 
 
 class Gemini:
-    def __init__(self, api_key, rpm, timeout=120.0):
+    """Batched yes/no judge. The prompt is injectable so other passes can
+    reuse the batching, rate limiting and schema-forced alignment."""
+
+    def __init__(self, api_key, rpm, timeout=120.0, system_prompt=None):
         self.api_key = api_key
+        self.system_prompt = system_prompt or SYSTEM_PROMPT
         self.limiter = RateLimiter(rpm)
         self.client = httpx.Client(timeout=timeout)
 
     def _call(self, phrases):
         numbered = "\n".join(f"{i + 1}. {p}" for i, p in enumerate(phrases))
         body = {
-            "system_instruction": {"parts": [{"text": SYSTEM_PROMPT}]},
+            "system_instruction": {"parts": [{"text": self.system_prompt}]},
             "contents": [
                 {
                     "role": "user",

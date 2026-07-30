@@ -1,4 +1,5 @@
-# Gemini verdict checkpoint: large, regenerable, local only
+# Gemini verdict checkpoints: large, regenerable, local only
 data/.gemini-verdicts.jsonl
+data/.qualifier-verdicts.jsonl
 __pycache__/
 *.pyc

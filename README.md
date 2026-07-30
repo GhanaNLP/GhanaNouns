@@ -40,14 +40,14 @@ This project was a collaborative effort. We would like to thank the following vo
 
 | Metric                             | Value      |
 |------------------------------------|------------|
-| Total unique noun phrases          | **519,318**|
-| … from news, research & speech     | 20,711     |
-| … from news & research only        | 31,619     |
-| … from news & speech only          | 14,157     |
-| … from research & speech only      | 4,615      |
-| … exclusively in news              | 156,445    |
-| … exclusively in research          | 229,222    |
-| … exclusively in speech            | 62,549     |
+| Total unique noun phrases          | **478,822**|
+| … from news, research & speech     | 20,067     |
+| … from news & research only        | 29,318     |
+| … from news & speech only          | 13,206     |
+| … from research & speech only      | 4,372      |
+| … exclusively in news              | 142,390    |
+| … exclusively in research          | 209,672    |
+| … exclusively in speech            | 59,797     |
 | Language‑filtered                  | FastText (lid.176, ≥0.7) |
 | Minimum phrase length              | 1 word     |
 | Maximum phrase length              | 10 words   |
@@ -78,6 +78,31 @@ kept, 94% of junk dropped), removing **286,999** entries in total:
 
 Because the filter is not perfect, a small amount of noise remains and some
 valid nouns were lost.
+
+### Participle qualifier stripping
+
+Some phrases were noun phrases carrying a participle qualifier: `overriding
+debt` is not a noun, but `debt` is. Rather than discard those rows,
+`scripts/strip_qualifiers.py` removes the qualifier and keeps the noun,
+then dedupes against nouns already present:
+
+| before | after |
+|--------|-------|
+| `overriding debt` | `debt` |
+| `increased crisis risk` | `crisis risk` |
+| `internally generated revenue strength` | `revenue strength` |
+
+A word is stripped only when spaCy tags it VBG/VBN/VBD, it sits before the
+head noun, and WordNet lists no noun sense for it — so `reporting channels`
+and `packaging shapes` are left alone. Hyphenated words are treated as single
+units and never stripped (`healthcare-associated infections` survives intact).
+Candidates are then checked by `gemini-3.5-flash-lite`, which protected
+**8,500** lexicalised compounds where the participle belongs to the name
+(`grounded theory`, `gated community`, `nonperforming loans`, `automated
+clearing house`, `dissolved oxygen`).
+
+This affected 55,738 phrases — 15,242 rewritten to their noun part and 40,496
+removed as duplicates — taking the dataset from 519,318 to **478,822** rows.
 
 ---
 
@@ -151,6 +176,12 @@ UTF‑8, comma‑separated, header row.
    - `gemini-3.5-flash-lite` judges each remaining phrase, 1 = keep / 0 = drop.  
    - Removed **286,999** entries; 95.4% accuracy on a held-out dev set.
 
+6. **Participle qualifier stripping** (`strip_qualifiers.py`)  
+   - spaCy VBG/VBN/VBD tags + WordNet noun-sense test locate the qualifier.  
+   - `overriding debt` → `debt`, then dedupe against existing nouns.  
+   - Gemini protects lexicalised compounds (`grounded theory`, `armed robbery`).  
+   - 55,738 phrases affected; 519,318 → **478,822** rows.
+
 ---
 
 ## 🚀 Usage Ideas
@@ -185,6 +216,7 @@ Use the frequency distributions to **bias subword tokenisation** or to create **
 │   ├── filter-non-english.py  # FastText language filtering
 │   ├── classify_topics.py     # Domain category tagging
 │   ├── clean_nouns.py         # Noun-phrase validity filtering
+│   ├── strip_qualifiers.py    # Participle qualifier stripping
 ├── README.md
 └── LICENSE
 ```
