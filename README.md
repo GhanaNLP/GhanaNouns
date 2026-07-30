@@ -40,20 +40,44 @@ This project was a collaborative effort. We would like to thank the following vo
 
 | Metric                             | Value      |
 |------------------------------------|------------|
-| Total unique noun phrases          | **806,317**|
-| … from news, research & speech     | 43,345     |
-| … from news & research only        | 66,024     |
-| … from news & speech only          | 28,226     |
-| … from research & speech only      | 10,990     |
-| … exclusively in news              | 395,534    |
-| … exclusively in research          | 650,886    |
-| … exclusively in speech            | 221,714    |
+| Total unique noun phrases          | **519,318**|
+| … from news, research & speech     | 20,711     |
+| … from news & research only        | 31,619     |
+| … from news & speech only          | 14,157     |
+| … from research & speech only      | 4,615      |
+| … exclusively in news              | 156,445    |
+| … exclusively in research          | 229,222    |
+| … exclusively in speech            | 62,549     |
 | Language‑filtered                  | FastText (lid.176, ≥0.7) |
 | Minimum phrase length              | 1 word     |
-| Maximum phrase length              | 6+ words   |
+| Maximum phrase length              | 10 words   |
 
 All phrases are **lowercased** and stripped of leading stopwords.  
 Proper nouns, acronyms, and non‑alphabetic tokens are **removed** during extraction.
+
+### Noun-phrase validity filtering
+
+An earlier release contained 806,317 phrases, but many were not usable nouns —
+they were noun phrases carrying a removable qualifier (`astute sports
+journalist`), two nouns joined by a conjunction (`crop residue and fertilizer
+additions`), verb phrases, or transcription noise. `scripts/clean_nouns.py`
+removes these in two stages: a rule prefilter for high-confidence cases, then a
+`gemini-3.5-flash-lite` pass that judges each remaining phrase. The filter
+scored **95.4%** accuracy on a held-out development set (97% of real nouns
+kept, 94% of junk dropped), removing **286,999** entries in total:
+
+| Removed for | Count |
+|-------------|-------|
+| Not a valid noun (model judgement) | 184,039 |
+| Conjoined nouns (`X and Y`) | 56,974 |
+| Adverb qualifier | 26,579 |
+| Speech disfluency (`uh`, `okay`) | 8,850 |
+| Single-letter OCR debris | 6,003 |
+| Stray determiner | 3,261 |
+| OCR ligatures (`eﬀect`) | 1,293 |
+
+Because the filter is not perfect, a small amount of noise remains and some
+valid nouns were lost.
 
 ---
 
@@ -122,6 +146,11 @@ UTF‑8, comma‑separated, header row.
    - FastText `lid.176.bin`, confidence ≥ 0.7.  
    - Retained **56.9%** of phrases as English.
 
+5. **Noun-phrase validity filtering** (`clean_nouns.py`)  
+   - Rule prefilter: conjunctions, adverb qualifiers, disfluencies, OCR debris.  
+   - `gemini-3.5-flash-lite` judges each remaining phrase, 1 = keep / 0 = drop.  
+   - Removed **286,999** entries; 95.4% accuracy on a held-out dev set.
+
 ---
 
 ## 🚀 Usage Ideas
@@ -154,6 +183,8 @@ Use the frequency distributions to **bias subword tokenisation** or to create **
 │   ├── extract_np.py          # Noun phrase extraction
 │   ├── combine-all.py         # Merge, clean, filter adjectives
 │   ├── filter-non-english.py  # FastText language filtering
+│   ├── classify_topics.py     # Domain category tagging
+│   ├── clean_nouns.py         # Noun-phrase validity filtering
 ├── README.md
 └── LICENSE
 ```
