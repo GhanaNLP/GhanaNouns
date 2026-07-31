@@ -106,6 +106,37 @@ removed as duplicates — taking the dataset from 519,318 to **478,822** rows.
 
 ---
 
+## 🌍 Ghanaian language translations
+
+`data/ghana-nouns-translated.csv.gz` gives **three ways to say each noun** in
+**Twi, Ewe, Ga and Dagbani** — 478,822 nouns × 4 languages × 3 variants, or
+**5.7 million translations**. Gzipped because the plain CSV is 131 MiB, past
+GitHub's file limit; `pandas.read_csv()` opens it directly.
+
+```python
+import pandas as pd
+df = pd.read_csv("data/ghana-nouns-translated.csv.gz")
+df[["phrase", "twi_1", "twi_2", "twi_3"]].head()
+```
+
+| phrase | twi_1 | twi_2 | twi_3 |
+|--------|-------|-------|-------|
+| people | nnipa | kurasefoɔ | amanfoɔ |
+| government | aban | mmapɔnmma | amanmuo |
+| study | adesua | adesuabea | nwoma kan |
+
+Columns are `phrase` plus `<language>_1..3` for each of `twi`, `ewe`, `ga`,
+`dagbani`. Produced by `scripts/translate_nouns.py` using `gemini-3.6-flash`
+with a response schema pinning the exact JSON shape, so every row has three
+distinct variants per language and no row can be misaligned against its noun.
+
+> **These translations are machine-generated and unverified.** Structure is
+> sound — zero malformed rows, 0.19% English passthrough, and 1.4% of rows reuse
+> one string across two languages — but fluency and accuracy have not been
+> checked by speakers, and quality is lower for Ga and Dagbani than for Twi.
+> Treat this as a starting pool to be verified, not as a gold reference.
+> Verification is what [SHOLA](https://shola.inkika.org) is for.
+
 ## 🔍 Sample Data
 
 | phrase     | news_count | research_count | speech_count | news_%  | research_% | speech_% | avg_%  | source               |
@@ -209,7 +240,8 @@ Use the frequency distributions to **bias subword tokenisation** or to create **
 ```
 .
 ├── data/
-│   └── ghana-nouns.csv   # Main dataset
+│   ├── ghana-nouns.csv                 # Main dataset
+│   └── ghana-nouns-translated.csv.gz   # + Twi/Ewe/Ga/Dagbani, 3 variants each
 ├── scripts/
 │   ├── extract_np.py          # Noun phrase extraction
 │   ├── combine-all.py         # Merge, clean, filter adjectives
@@ -217,6 +249,7 @@ Use the frequency distributions to **bias subword tokenisation** or to create **
 │   ├── classify_topics.py     # Domain category tagging
 │   ├── clean_nouns.py         # Noun-phrase validity filtering
 │   ├── strip_qualifiers.py    # Participle qualifier stripping
+│   ├── translate_nouns.py     # Twi/Ewe/Ga/Dagbani translation
 ├── README.md
 └── LICENSE
 ```

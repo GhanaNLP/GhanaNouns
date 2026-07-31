@@ -1,5 +1,10 @@
 # Gemini verdict checkpoints: large, regenerable, local only
 data/.gemini-verdicts.jsonl
 data/.qualifier-verdicts.jsonl
+data/.translations.jsonl
+# Shipped gzipped instead: the plain CSV is 131 MiB, over GitHub file limit
+data/ghana-nouns-translated.csv
 __pycache__/
 *.pyc
+shola-app-brief.txt
+.shola-app-brief.txt
