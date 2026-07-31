@@ -291,7 +291,7 @@ BibTeX:
 
 ## 📄 License
 
-**Creative Commons Attribution 4.0 International (CC BY 4.0)**  
+**Creative Commons Attribution 4.0 International (CC BY 4.0)** — see `LICENSE`.  
 You are free to share and adapt the material for any purpose, even commercially, provided appropriate credit is given.
 
 ---
